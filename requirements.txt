@@ -9,5 +9,7 @@ transformers>=4.20.0
 tqdm>=4.64.0
 openai>=1.40.0
 PyMuPDF
-potrace
+# potrace
 blend-modes
+requests
+google-genai

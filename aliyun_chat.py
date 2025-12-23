@@ -17,7 +17,7 @@ class AliyunChat:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model": ("STRING", {"default": "qwen-plus"}),
+                "model": ("STRING", {"default": "qwen3-plus"}),
             },
             "optional": {
                 "system_prompt": ("STRING", {"default": "You are a helpful assistant.", "multiline": True}),
@@ -132,7 +132,7 @@ class AliyunVLChat(AliyunChat):
         return {
             "required": {
                 "image": ("IMAGE",),
-                "model": ("STRING", {"default": "qwen-vl-plus"}),
+                "model": ("STRING", {"default": "qwen3-vl-plus"}),
             },
             "optional": {
                 "system_prompt": ("STRING", {"default": "", "multiline": True}),

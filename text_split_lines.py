@@ -7,7 +7,7 @@ class TextSplitLines:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "multiline_text": ("STRING", {"multiline": True, "default": ""}),
+                "multiline_text": ("STRING", {"multiline": True,"forceInput": True, "default": ""}),
             },
             "optional": {
                 "skip_empty": ("BOOLEAN", {"default": True}),
