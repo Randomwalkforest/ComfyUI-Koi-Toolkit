@@ -25,6 +25,11 @@ modules = [
     "qwen_vl_visualizer",
     "crop_by_json",
     "gemini_vision",
+    "idealab_api",
+    "image_marker",
+    "mask_batch_combine",
+    "mask_filter_by_inclusion",
+    "mask_threshold_to_white",
 ]
 
 for module_name in modules:

@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import io
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from PIL import Image
 import torch
@@ -196,12 +197,146 @@ class AliyunVLChat(AliyunChat):
         return {"ui": {"text": [content]}, "result": (content, reasoning)}
 
 
+class AliyunConcurrentVLChat(AliyunVLChat):
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image1": ("IMAGE",),
+                "model": ("STRING", {"default": "qwen3-vl-plus"}),
+            },
+            "optional": {
+                "system_prompt1": ("STRING", {"default": "", "multiline": True}),
+                "user_message1": ("STRING", {"default": "", "multiline": True}),
+                "image2": ("IMAGE", {"default": None}),
+                "system_prompt2": ("STRING", {"default": "", "multiline": True}),
+                "user_message2": ("STRING", {"default": "", "multiline": True}),
+                "image3": ("IMAGE", {"default": None}),
+                "system_prompt3": ("STRING", {"default": "", "multiline": True}),
+                "user_message3": ("STRING", {"default": "", "multiline": True}),
+                "api_key": ("STRING", {"default": ""}),
+                "base_url": ("STRING", {"default": "https://dashscope.aliyuncs.com/compatible-mode/v1"}),
+                "temperature": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 2.0, "step": 0.1}),
+                "max_tokens": ("INT", {"default": 1024, "min": 1, "max": 8192}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = (
+        "content1",
+        "reasoning1",
+        "content2",
+        "reasoning2",
+        "content3",
+        "reasoning3",
+    )
+    FUNCTION = "run"
+    CATEGORY = "🐟Koi-Toolkit"
+
+    def _build_messages(self, image, user_message, system_prompt):
+        image_url = self._image_to_base64(image)
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+
+        content_list = [{"type": "image_url", "image_url": {"url": image_url}}]
+        if user_message:
+            content_list.append({"type": "text", "text": user_message})
+
+        messages.append({"role": "user", "content": content_list})
+        return messages
+
+    def _call_single(self, client, model, temperature, max_tokens, image, user_message, system_prompt):
+        try:
+            messages = self._build_messages(image, user_message, system_prompt)
+            kwargs = {
+                "model": model,
+                "messages": messages,
+                "temperature": float(temperature),
+                "max_tokens": int(max_tokens),
+            }
+            resp = client.chat.completions.create(**kwargs)
+            return self._aggregate_non_stream(resp)
+        except Exception as e:
+            return "", f"error: {e}"
+
+    def run(
+        self,
+        image1,
+        model,
+        user_message1,
+        system_prompt1="",
+        image2=None,
+        user_message2="",
+        system_prompt2="",
+        image3=None,
+        user_message3="",
+        system_prompt3="",
+        api_key="",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        temperature=0.7,
+        max_tokens=1024,
+    ):
+        client = self._get_client(api_key, base_url)
+
+        requests = [
+            ("1", image1, user_message1, system_prompt1),
+            ("2", image2, user_message2, system_prompt2),
+            ("3", image3, user_message3, system_prompt3),
+        ]
+
+        results = {"1": ("", ""), "2": ("", ""), "3": ("", "")}
+        ui_texts = []
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {}
+            for key, img, prompt, sys_prompt in requests:
+                if img is None:
+                    continue
+                futures[key] = executor.submit(
+                    self._call_single,
+                    client,
+                    model,
+                    temperature,
+                    max_tokens,
+                    img,
+                    prompt,
+                    sys_prompt,
+                )
+
+            for key, future in futures.items():
+                results[key] = future.result()
+
+        for key in ["1", "2", "3"]:
+            content, reasoning = results[key]
+            if content:
+                label = f"[{key}] "
+                ui_texts.append(f"{label}{content}")
+            elif reasoning:
+                label = f"[{key}] "
+                ui_texts.append(f"{label}{reasoning}")
+
+        return {
+            "ui": {"text": ui_texts},
+            "result": (
+                results["1"][0],
+                results["1"][1],
+                results["2"][0],
+                results["2"][1],
+                results["3"][0],
+                results["3"][1],
+            ),
+        }
+
+
 NODE_CLASS_MAPPINGS = {
     "AliyunChat": AliyunChat,
     "AliyunVLChat": AliyunVLChat,
+    "AliyunConcurrentVLChat": AliyunConcurrentVLChat,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "AliyunChat": "🐟 Aliyun Chat",
     "AliyunVLChat": "🐟 Aliyun VL Chat",
+    "AliyunConcurrentVLChat": "🐟 Aliyun VL Chat (Concurrent)",
 }

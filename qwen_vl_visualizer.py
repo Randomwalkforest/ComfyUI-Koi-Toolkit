@@ -1,4 +1,5 @@
 import json
+import re
 import torch
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageColor
@@ -54,13 +55,52 @@ class QwenVLBboxVisualizer:
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "JSON")
-    RETURN_NAMES = ("image", "bboxes_data")
+    RETURN_TYPES = ("IMAGE", "MASK", "JSON")
+    RETURN_NAMES = ("image", "mask", "bboxes_data")
     FUNCTION = "draw_bboxes"
     CATEGORY = "Koi/Visualization"
 
+    def find_bboxes_recursive(self, data):
+        """递归查找包含 bbox_2d 或 bbox 的对象"""
+        bboxes = []
+        if isinstance(data, dict):
+            # 直接在该对象上提取bbox
+            if "bbox_2d" in data and isinstance(data["bbox_2d"], list) and len(data["bbox_2d"]) == 4:
+                bboxes.append(dict(data))
+            elif "bbox" in data and isinstance(data["bbox"], list) and len(data["bbox"]) == 4:
+                bboxes.append(dict(data))
+
+            # 继续递归查找子项
+            for value in data.values():
+                bboxes.extend(self.find_bboxes_recursive(value))
+        elif isinstance(data, list):
+            for item in data:
+                bboxes.extend(self.find_bboxes_recursive(item))
+        return bboxes
+
+    def extract_bboxes_regex(self, text):
+        """正则提取 fallback"""
+        bboxes = []
+        
+        # 直接匹配任意 [x, y, x, y] 格式，不关心键名
+        pattern = re.compile(r'\[\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\]')
+        
+        for i, match in enumerate(pattern.finditer(text)):
+            x1, y1, x2, y2 = match.groups()
+            x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
+            
+            # 不再尝试根据特定键名查找标签，直接使用序号
+            label = f"bbox_{i+1}"
+
+            bboxes.append({
+                "bbox_2d": [x1, y1, x2, y2],
+                "label": label
+            })
+            
+        return bboxes
+
     def parse_json(self, json_text):
-        """解析JSON文本，移除markdown标记"""
+        """解析JSON文本，移除markdown标记，支持容错"""
         # 清理markdown标记
         if "```json" in json_text:
             json_text = json_text.split("```json")[1].split("```")[0]
@@ -69,14 +109,28 @@ class QwenVLBboxVisualizer:
         
         json_text = json_text.strip()
         
+        # 尝试修复常见的 JSON 格式错误
+        # 修复双重花括号 {{...}} -> {...}
+        json_text = re.sub(r'\{\s*\{', '{', json_text)
+        json_text = re.sub(r'\}\s*\}', '}', json_text)
+        
+        data = []
         try:
-            data = json.loads(json_text)
-            if not isinstance(data, list):
-                data = [data]
-            return data
+            parsed = json.loads(json_text)
+            # 递归查找所有符合格式的 bbox 对象
+            data = self.find_bboxes_recursive(parsed)
         except Exception as e:
-            print(f"JSON解析错误: {e}")
-            return []
+            print(f"JSON解析失败，尝试正则提取: {e}")
+            pass
+            
+        if not data:
+             print(f"未找到标准格式数据，尝试正则提取...")
+             data = self.extract_bboxes_regex(json_text)
+             
+        if not data:
+             print(f"未找到有效数据，原始文本片段: {json_text[:100]}...")
+             
+        return data
 
     def draw_bboxes(self, image, json_string, line_width=3):
         """在图像上绘制边界框"""
@@ -85,6 +139,10 @@ class QwenVLBboxVisualizer:
         width, height = pil_image.size
         
         draw = ImageDraw.Draw(pil_image)
+        
+        # 创建 mask 图像
+        mask_img = Image.new('L', (width, height), 0)
+        mask_draw = ImageDraw.Draw(mask_img)
         
         # 计算字体大小：图片短边的 2%
         font_size = max(int(min(width, height) * 0.02), 12)
@@ -95,17 +153,17 @@ class QwenVLBboxVisualizer:
         
         if not bboxes:
             print("未找到有效的边界框数据")
-            return (image, [])
+            return (image, torch.zeros((1, height, width), dtype=torch.float32), [])
         
         output_bboxes = []
         
         # 绘制每个边界框
         for i, bbox_item in enumerate(bboxes):
-            if "bbox_2d" not in bbox_item:
+            bbox = bbox_item.get("bbox_2d", bbox_item.get("bbox"))
+            if not bbox:
                 continue
             
             color = COLORS[i % len(COLORS)]
-            bbox = bbox_item["bbox_2d"]
             
             # 将标准化坐标 [x1, y1, x2, y2] (0-1000) 转换为绝对坐标
             x1 = int(bbox[0] / 1000 * width)
@@ -122,15 +180,25 @@ class QwenVLBboxVisualizer:
             # 绘制矩形框
             draw.rectangle([(x1, y1), (x2, y2)], outline=color, width=line_width)
             
-            # 添加标签
-            if "label" in bbox_item:
-                draw.text((x1 + 8, y1 + 6), bbox_item["label"], fill=color, font=font)
+            # 绘制 mask
+            mask_draw.rectangle([(x1, y1), (x2, y2)], fill=255)
             
-            output_bboxes.append({"bbox_2d": [x1, y1, x2, y2]})
+            # 添加标签
+            label = bbox_item.get("label", bbox_item.get("text_content", bbox_item.get("name")))
+            if label:
+                draw.text((x1 + 8, y1 + 6), str(label), fill=color, font=font)
+            
+            abs_bbox = {"bbox_2d": [x1, y1, x2, y2]}
+            output_bboxes.append(abs_bbox)
         
         # 转换回 tensor
         result = pil2tensor(pil_image)
-        return (result, output_bboxes)
+        
+        # Convert mask to tensor
+        mask_np = np.array(mask_img).astype(np.float32) / 255.0
+        mask_tensor = torch.from_numpy(mask_np).unsqueeze(0)
+        
+        return (result, mask_tensor, output_bboxes)
 
 
 class QwenVLPointVisualizer:
