@@ -16,6 +16,7 @@ class IdealabAPINode:
                 "api_key": ("STRING", {"default": "", "multiline": False}),
                 "system_prompt": ("STRING", {"default": "", "multiline": True}),
                 "user_prompt": ("STRING", {"default": "", "multiline": True}),
+                "temperature": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 2.0, "step": 0.1}),
             },
             "optional": {
                 "image": ("IMAGE",),
@@ -28,7 +29,7 @@ class IdealabAPINode:
     FUNCTION = "chat"
     CATEGORY = "🐟Koi-Toolkit"
 
-    def chat(self, api_key, system_prompt, user_prompt, model, image=None, image2=None):
+    def chat(self, api_key, system_prompt, user_prompt, model, temperature, image=None, image2=None):
         url = "https://idealab.alibaba-inc.com/api/openai/v1/chat/completions"
         
         headers = {
@@ -89,11 +90,12 @@ class IdealabAPINode:
         payload = {
             "messages": messages,
             "model": model,
+            # "temperature": temperature,
             "extendParams": {}
         }
 
         try:
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
+            response = requests.post(url, headers=headers, json=payload, timeout=90)
             response.raise_for_status()
             
             result = response.json()
