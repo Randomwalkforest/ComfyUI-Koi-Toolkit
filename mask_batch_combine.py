@@ -11,7 +11,7 @@ class MaskBatchCombine:
 
     RETURN_TYPES = ("MASK",)
     FUNCTION = "combine"
-    CATEGORY = "Koi/Mask"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def combine(self, mask):
         # mask shape: [B, H, W]

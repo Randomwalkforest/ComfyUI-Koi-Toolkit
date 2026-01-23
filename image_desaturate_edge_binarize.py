@@ -127,5 +127,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ImageDesaturateEdgeBinarize": "🐟 Image Desaturate Edge Binarize",
+    "ImageDesaturateEdgeBinarize": "Image Desaturate Edge Binarize",
 }

@@ -124,7 +124,7 @@ class JsonExtractTextList:
     RETURN_NAMES = ("text",)
     OUTPUT_IS_LIST = (True,)
     FUNCTION = "extract"
-    CATEGORY = "Koi/Utils"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def extract(self, json_input: str, path: str = "", leaf_key: str = ""):
         raw = _strip_code_fences(str(json_input))

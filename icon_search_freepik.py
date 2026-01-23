@@ -30,7 +30,7 @@ class FreepikIconSearch:
     RETURN_TYPES = ("JSON", "JSON")
     RETURN_NAMES = ("icon_urls", "raw_json")
     FUNCTION = "search_icons"
-    CATEGORY = "Koi/Network"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def search_icons(self, api_key, accept_language, term, page, per_page, thumbnail_size, icon_type, color, shape, period, order, enable_random_selection, selection_count):
         base_url = "https://api.freepik.com/v1/icons"

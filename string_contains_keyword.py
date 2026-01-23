@@ -14,7 +14,7 @@ class StringContainsKeyword:
     RETURN_TYPES = ("BOOLEAN",)
     RETURN_NAMES = ("has_keyword",)
     FUNCTION = "check"
-    CATEGORY = "Koi/Utils"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def check(self, string_input, keyword, case_sensitive=False):
         text = "" if string_input is None else str(string_input)

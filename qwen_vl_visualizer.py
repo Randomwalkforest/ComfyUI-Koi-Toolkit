@@ -58,7 +58,7 @@ class QwenVLBboxVisualizer:
     RETURN_TYPES = ("IMAGE", "MASK", "JSON")
     RETURN_NAMES = ("image", "mask", "bboxes_data")
     FUNCTION = "draw_bboxes"
-    CATEGORY = "Koi/Visualization"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def find_bboxes_recursive(self, data):
         """递归查找包含 bbox_2d 或 bbox 的对象"""
@@ -228,7 +228,7 @@ class QwenVLPointVisualizer:
     RETURN_TYPES = ("IMAGE", "JSON")
     RETURN_NAMES = ("image", "points_data")
     FUNCTION = "draw_points"
-    CATEGORY = "Koi/Visualization"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def parse_json_points(self, json_text):
         """解析JSON格式的点坐标"""

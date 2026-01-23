@@ -15,7 +15,7 @@ class MaskFilterByInclusion:
 
     RETURN_TYPES = ("MASK",)
     FUNCTION = "process"
-    CATEGORY = "Koi"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def process(self, mask_to_filter, mask_reference, threshold):
         # mask inputs are torch tensors [B, H, W]
@@ -67,5 +67,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MaskFilterByInclusion": "Mask Filter By Inclusion (Koi)"
+    "MaskFilterByInclusion": "Mask Filter By Inclusion"
 }

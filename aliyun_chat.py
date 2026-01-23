@@ -336,7 +336,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "AliyunChat": "🐟 Aliyun Chat",
-    "AliyunVLChat": "🐟 Aliyun VL Chat",
-    "AliyunConcurrentVLChat": "🐟 Aliyun VL Chat (Concurrent)",
+    "AliyunChat": "Aliyun Chat",
+    "AliyunVLChat": "Aliyun VL Chat",
+    "AliyunConcurrentVLChat": "Aliyun VL Chat (Concurrent)",
 }

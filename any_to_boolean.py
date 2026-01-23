@@ -14,7 +14,7 @@ class AnyToBoolean:
     RETURN_TYPES = ("BOOLEAN",)
     RETURN_NAMES = ("boolean",)
     FUNCTION = "convert"
-    CATEGORY = "Koi/Logic"
+    CATEGORY = "🐟Koi-Toolkit"
 
     def convert(self, any_input):
         def is_valid(x):
@@ -95,10 +95,38 @@ class AnyToBoolean:
         ret = bool(any_input)
         return (ret,)
 
+
+class StringToBoolean:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "string_input": ("STRING", {"multiline": False, "default": "false"}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("boolean",)
+    FUNCTION = "convert"
+    CATEGORY = "🐟Koi-Toolkit"
+
+    def convert(self, string_input):
+        s = str(string_input).strip().lower()
+        if s in ["true", "1", "yes", "on"]:
+            return (True,)
+        
+        # 默认返回False，包括 "false", "0", "no", "off" 以及其他无法识别的情况
+        return (False,)
+
+
+
 NODE_CLASS_MAPPINGS = {
-    "AnyToBoolean": AnyToBoolean
+    "AnyToBoolean": AnyToBoolean,
+    "StringToBoolean": StringToBoolean
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "AnyToBoolean": "Any To Boolean"
+    "AnyToBoolean": "Any To Boolean",
+    "StringToBoolean": "String to Boolean"
+    
 }

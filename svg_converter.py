@@ -303,8 +303,8 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SVGToImage": "🐟 SVG To Image",
-    "SaveSVG": "🐟 Save SVG",
-    "PreviewSVG": "🐟 Preview SVG",
-    "ImageToSVG_Potracer": "🐟 Image To SVG (Potracer)",
+    "SVGToImage": "SVG To Image",
+    "SaveSVG": "Save SVG",
+    "PreviewSVG": "Preview SVG",
+    "ImageToSVG_Potracer": "Image To SVG (Potracer)",
 }

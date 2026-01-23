@@ -416,6 +416,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "imageStitchForICImproved": "🐟Image Stitch For IC Improved",
-    "imageStitchForICImproved_CropBack": "🐟Image Stitch For IC Improved CropBack",
+    "imageStitchForICImproved": "Image Stitch For IC Improved",
+    "imageStitchForICImproved_CropBack": "Image Stitch For IC Improved CropBack",
 }

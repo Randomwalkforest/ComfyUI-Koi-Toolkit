@@ -109,5 +109,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MaskExternalRectangle": "🐟 Mask External Rectangle",
+    "MaskExternalRectangle": "Mask External Rectangle",
 }
